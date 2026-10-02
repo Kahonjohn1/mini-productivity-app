@@ -69,6 +69,28 @@ function App() {
     return t.category === filter;
   });
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) return "Good morning 👋";
+    if (hour >= 12 && hour < 17) return "Good afternoon 👋";
+    if (hour >= 17 && hour < 21) return "Good evening 👋";
+    return "Good night 👋";
+  };
+
+  const getTodayString = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  const today = getTodayString();
+  const todayTasks = tasks.filter((t) => t.dueDate === today);
+  const todayCompleted = todayTasks.filter(isCompleted).length;
+  const todayTotal = todayTasks.length;
+  const todayPercent = todayTotal === 0 ? 0 : Math.round((todayCompleted / todayTotal) * 100);
+
   const getEmptyMessage = () => {
     if (totalTasks === 0) {
       return "No tasks yet. Add your first task to get started.";
@@ -127,6 +149,39 @@ function App() {
   return (
     <main className="mx-auto w-full max-w-5xl space-y-6 px-4 py-8 sm:space-y-8 sm:px-6 sm:py-12 lg:px-8">
       <Header dark={dark} onToggle={() => setDark((d) => !d)} />
+      <div className="space-y-2">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+          {getGreeting()}
+        </h1>
+        <p className="text-sm text-muted-foreground">Here's what's on your plate today.</p>
+        <div className="mt-4 space-y-2">
+          {todayTotal === 0 ? (
+            <p className="text-sm text-muted-foreground">No tasks scheduled for today.</p>
+          ) : (
+            <>
+              <p className="text-sm font-medium text-foreground">
+                {todayCompleted} of {todayTotal} tasks completed
+              </p>
+              <div className="flex items-center gap-3">
+                <div
+                  className="h-2 w-full overflow-hidden rounded-full bg-secondary"
+                  role="progressbar"
+                  aria-valuenow={todayPercent}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label={`${todayPercent}% of today's tasks completed`}
+                >
+                  <div
+                    className="h-full bg-primary transition-all duration-300 ease-out motion-reduce:transition-none"
+                    style={{ width: `${todayPercent}%` }}
+                  />
+                </div>
+                <span className="text-sm tabular-nums text-muted-foreground">{todayPercent}%</span>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
       <StatsSection total={totalTasks} active={activeTasks} completed={completedTasks} />
       <TaskForm
         title={title}
