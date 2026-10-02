@@ -22,7 +22,7 @@ const CATEGORY_OPTIONS: { value: Filter; label: string }[] = [
 
 export function FilterTabs({ filter, counts, onChange }: Props) {
   return (
-    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+    <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-2">
       <div
         role="group"
         aria-label="Filter tasks by status"
@@ -36,7 +36,7 @@ export function FilterTabs({ filter, counts, onChange }: Props) {
               type="button"
               aria-pressed={active}
               onClick={() => onChange(o.value)}
-              className={`flex min-h-10 flex-1 items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:flex-none ${
+              className={`flex min-h-9 flex-1 items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-h-10 sm:gap-2 sm:px-4 sm:text-sm sm:flex-none ${
                 active
                   ? "bg-card text-foreground shadow-card"
                   : "text-muted-foreground hover:text-foreground"
@@ -63,7 +63,7 @@ export function FilterTabs({ filter, counts, onChange }: Props) {
               type="button"
               aria-pressed={active}
               onClick={() => onChange(o.value)}
-              className={`flex min-h-10 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:flex-none ${
+              className={`flex min-h-9 items-center justify-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-h-10 sm:gap-2 sm:px-3 sm:text-sm sm:flex-none ${
                 active
                   ? "bg-card text-foreground shadow-card"
                   : "text-muted-foreground hover:text-foreground"

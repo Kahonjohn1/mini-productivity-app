@@ -147,24 +147,28 @@ function App() {
   const deleteTask = (id: string) => setTasks((prev) => prev.filter((t) => t.id !== id));
 
   return (
-    <main className="mx-auto w-full max-w-5xl space-y-6 px-4 py-8 sm:space-y-8 sm:px-6 sm:py-12 lg:px-8">
+    <main className="mx-auto w-full max-w-5xl space-y-3 px-4 py-3 sm:space-y-5 sm:px-6 sm:py-6 lg:px-8">
       <Header dark={dark} onToggle={() => setDark((d) => !d)} />
-      <div className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+      <div className="space-y-1.5">
+        <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
           {getGreeting()}
         </h1>
-        <p className="text-sm text-muted-foreground">Here's what's on your plate today.</p>
-        <div className="mt-4 space-y-2">
+        <p className="text-xs text-muted-foreground sm:text-sm">
+          Here's what's on your plate today.
+        </p>
+        <div className="mt-2 space-y-1.5">
           {todayTotal === 0 ? (
-            <p className="text-sm text-muted-foreground">No tasks scheduled for today.</p>
+            <p className="text-xs text-muted-foreground sm:text-sm">
+              No tasks scheduled for today.
+            </p>
           ) : (
             <>
-              <p className="text-sm font-medium text-foreground">
+              <p className="text-xs font-medium text-foreground sm:text-sm">
                 {todayCompleted} of {todayTotal} tasks completed
               </p>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <div
-                  className="h-2 w-full overflow-hidden rounded-full bg-secondary"
+                  className="h-1.5 w-full overflow-hidden rounded-full bg-secondary"
                   role="progressbar"
                   aria-valuenow={todayPercent}
                   aria-valuemin={0}
@@ -176,7 +180,7 @@ function App() {
                     style={{ width: `${todayPercent}%` }}
                   />
                 </div>
-                <span className="text-sm tabular-nums text-muted-foreground">{todayPercent}%</span>
+                <span className="text-xs tabular-nums text-muted-foreground">{todayPercent}%</span>
               </div>
             </>
           )}
@@ -196,8 +200,8 @@ function App() {
         onDueDateChange={setDueDate}
         onSubmit={addTask}
       />
-      <section aria-labelledby="tasks-heading" className="space-y-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <section aria-labelledby="tasks-heading" className="space-y-3">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <h2 id="tasks-heading" className="text-lg font-semibold">
             Your tasks
           </h2>

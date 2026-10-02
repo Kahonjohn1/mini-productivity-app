@@ -14,7 +14,7 @@ type Props = {
 };
 
 const field =
-  "h-12 w-full rounded-xl border border-input bg-background px-4 text-base text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+  "h-10 w-full rounded-xl border border-input bg-background px-3 text-sm text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:h-11 sm:text-base sm:px-4";
 
 export function TaskForm({
   title,
@@ -34,15 +34,15 @@ export function TaskForm({
   return (
     <section
       aria-labelledby="new-task-heading"
-      className="rounded-2xl border bg-card p-4 shadow-card sm:p-6"
+      className="rounded-2xl border bg-card p-3 shadow-card sm:p-5"
     >
-      <h2 id="new-task-heading" className="text-lg font-semibold">
+      <h2 id="new-task-heading" className="text-base font-semibold sm:text-lg">
         New task
       </h2>
       <form
         onSubmit={handleSubmit}
         noValidate
-        className="mt-4 grid gap-3 md:grid-cols-[1fr_180px_180px_auto] md:items-start"
+        className="mt-3 grid gap-2 md:grid-cols-[1fr_160px_160px_auto] md:items-start"
       >
         <div>
           <label htmlFor="task-title" className="sr-only">
@@ -99,7 +99,7 @@ export function TaskForm({
         </div>
         <button
           type="submit"
-          className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-primary px-6 font-semibold text-primary-foreground transition hover:opacity-90 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
+          className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground transition hover:opacity-90 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card sm:h-11 sm:px-6 sm:text-base"
         >
           <Plus className="h-4 w-4" aria-hidden /> Add Task
         </button>

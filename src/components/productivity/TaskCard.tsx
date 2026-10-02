@@ -17,7 +17,7 @@ export function TaskCard({ task, onChangeProgress, onComplete, onDelete }: Props
   const labelId = `task-${task.id}-title`;
 
   return (
-    <li className="animate-rise rounded-2xl border bg-card p-4 shadow-card transition-colors sm:p-5">
+    <li className="animate-rise rounded-2xl border bg-card p-3 shadow-card transition-colors sm:p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3
@@ -26,12 +26,12 @@ export function TaskCard({ task, onChangeProgress, onComplete, onDelete }: Props
           >
             {task.title}
           </h3>
-          <div className="mt-1.5 flex flex-wrap items-center gap-2">
-            <span className="inline-block rounded-full bg-accent px-2.5 py-0.5 text-xs font-medium text-accent-foreground">
+          <div className="mt-1 flex flex-wrap items-center gap-1.5 sm:mt-1.5 sm:gap-2">
+            <span className="inline-block rounded-full bg-accent px-2 py-0.5 text-[11px] font-medium text-accent-foreground sm:px-2.5 sm:text-xs">
               {task.category}
             </span>
             {task.dueDate && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground">
+              <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium text-secondary-foreground sm:px-2.5 sm:text-xs">
                 <CalendarDays className="h-3 w-3" aria-hidden />
                 Due{" "}
                 {new Date(`${task.dueDate}T00:00:00`).toLocaleDateString(undefined, {
@@ -53,7 +53,7 @@ export function TaskCard({ task, onChangeProgress, onComplete, onDelete }: Props
         </button>
       </div>
 
-      <div className="mt-4 flex items-center gap-3">
+      <div className="mt-3 flex items-center gap-2">
         <div
           role="progressbar"
           aria-labelledby={labelId}
@@ -61,7 +61,7 @@ export function TaskCard({ task, onChangeProgress, onComplete, onDelete }: Props
           aria-valuemax={100}
           aria-valuenow={progress}
           aria-valuetext={`${progress}%${done ? ", completed" : ""}`}
-          className="h-3 flex-1 overflow-hidden rounded-full bg-track"
+          className="h-2 flex-1 overflow-hidden rounded-full bg-track sm:h-2.5"
         >
           <div
             className="progress-fill h-full rounded-full"
@@ -79,11 +79,11 @@ export function TaskCard({ task, onChangeProgress, onComplete, onDelete }: Props
         </span>
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center gap-2">
+      <div className="mt-3 flex flex-wrap items-center gap-1.5 sm:mt-4 sm:gap-2">
         {progress > 0 && (
           <button
             type="button"
-            className={`${btn} bg-background hover:bg-secondary`}
+            className={`${btn.replace("min-h-11", "min-h-9 sm:min-h-11")} bg-background hover:bg-secondary`}
             onClick={() => onChangeProgress(task.id, -10)}
             aria-label={`Decrease progress of ${task.title} by 10%`}
           >
@@ -94,7 +94,7 @@ export function TaskCard({ task, onChangeProgress, onComplete, onDelete }: Props
           <>
             <button
               type="button"
-              className={`${btn} bg-background hover:bg-secondary`}
+              className={`${btn.replace("min-h-11", "min-h-9 sm:min-h-11")} bg-background hover:bg-secondary`}
               onClick={() => onChangeProgress(task.id, 10)}
               aria-label={`Increase progress of ${task.title} by 10%`}
             >
@@ -102,7 +102,7 @@ export function TaskCard({ task, onChangeProgress, onComplete, onDelete }: Props
             </button>
             <button
               type="button"
-              className={`${btn} bg-background hover:bg-secondary`}
+              className={`${btn.replace("min-h-11", "min-h-9 sm:min-h-11")} bg-background hover:bg-secondary`}
               onClick={() => onChangeProgress(task.id, 25)}
               aria-label={`Increase progress of ${task.title} by 25%`}
             >
@@ -110,7 +110,7 @@ export function TaskCard({ task, onChangeProgress, onComplete, onDelete }: Props
             </button>
             <button
               type="button"
-              className={`${btn} border-transparent bg-primary text-primary-foreground hover:opacity-90`}
+              className={`${btn.replace("min-h-11", "min-h-9 sm:min-h-11")} border-transparent bg-primary text-primary-foreground hover:opacity-90`}
               onClick={() => onComplete(task.id)}
               aria-label={`Mark ${task.title} as complete`}
             >
@@ -118,7 +118,7 @@ export function TaskCard({ task, onChangeProgress, onComplete, onDelete }: Props
             </button>
           </>
         ) : (
-          <span className="animate-rise inline-flex min-h-11 items-center gap-1.5 rounded-lg bg-success/15 px-3.5 text-sm font-semibold text-success">
+          <span className="animate-rise inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-success/15 px-3 text-sm font-semibold text-success sm:min-h-11 sm:px-3.5">
             <Check className="h-4 w-4" aria-hidden /> Completed
           </span>
         )}
