@@ -5,6 +5,24 @@ export type Task = {
   progress: number;
   dueDate?: string; // ISO date string (yyyy-mm-dd)
   dueTime?: string; // time string (e.g. HH:MM)
+  completedAt?: string; // ISO timestamp when completed
+};
+
+/**
+ * An immutable snapshot of a task at the moment it reached 100%.
+ * `id` uniquely identifies the completion event (so the same task can appear
+ * in history more than once across reopen/recomplete cycles), while `taskId`
+ * points back to the original task.
+ */
+export type CompletedRecord = {
+  id: string;
+  taskId: string;
+  title: string;
+  category: string;
+  progress: number;
+  dueDate?: string;
+  dueTime?: string;
+  completedAt: string;
 };
 
 export type StatusFilter = "all" | "active" | "completed";

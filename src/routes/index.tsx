@@ -5,14 +5,23 @@ import { StatsSection } from "@/components/productivity/StatsSection";
 import { TaskForm } from "@/components/productivity/TaskForm";
 import { FilterTabs } from "@/components/productivity/FilterTabs";
 import { TaskList } from "@/components/productivity/TaskList";
+import { CompletedHistory } from "@/components/productivity/CompletedHistory";
 import {
   CATEGORIES,
   clamp,
   isCompleted,
+  type CompletedRecord,
   type Filter,
   type Task,
 } from "@/components/productivity/types";
-import { loadTasks, saveTasks } from "@/components/productivity/storage";
+import {
+  hasStoredTasks,
+  loadHistory,
+  loadTasks,
+  saveHistory,
+  saveTasks,
+} from "@/components/productivity/storage";
+import { newId, toCompletedRecord, toReopenedTask } from "@/components/productivity/history";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -42,7 +51,10 @@ const INITIAL_TASKS: Task[] = [
 
 function App() {
   // Main state
+  // `tasks` holds active/in-progress work only. Completed work is moved into
+  // `history` as an independent snapshot, so the two never share rows.
   const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
+  const [history, setHistory] = useState<CompletedRecord[]>([]);
   const [filter, setFilter] = useState<Filter>("all");
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState<string>("Personal");
@@ -53,10 +65,36 @@ function App() {
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    const stored = loadTasks();
-    if (stored.length > 0) {
-      setTasks(stored);
+    const storedTasks = loadTasks();
+    const storedHistory = loadHistory();
+
+    // A task stored at 100% predates the split between tasks and history, so
+    // migrate it into a history record instead of leaving it stranded as active
+    // work. Guarded by taskId so repeat visits cannot duplicate the record.
+    const seededHistory = [...storedHistory];
+    const migrated: CompletedRecord[] = [];
+    const activeTasks = storedTasks.filter((t) => {
+      if (!isCompleted(t)) return true;
+      if (!t.completedAt || seededHistory.some((r) => r.taskId === t.id)) return false;
+      migrated.push(toCompletedRecord(t, t.completedAt));
+      return false;
+    });
+
+    // Only seed INITIAL_TASKS for a genuinely new user. A returning user whose
+    // active list happens to be empty (everything completed or deleted) must not
+    // have the sample tasks pushed back at them.
+    if (!hasStoredTasks()) {
+      for (const t of INITIAL_TASKS) {
+        if (isCompleted(t)) {
+          migrated.push(toCompletedRecord(t, new Date().toISOString()));
+        } else {
+          activeTasks.push(t);
+        }
+      }
     }
+
+    setTasks(activeTasks);
+    setHistory([...migrated, ...seededHistory]);
     setHydrated(true);
   }, []);
 
@@ -67,22 +105,32 @@ function App() {
   }, [tasks, hydrated]);
 
   useEffect(() => {
+    if (hydrated) {
+      saveHistory(history);
+    }
+  }, [history, hydrated]);
+
+  useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
   }, [dark]);
 
   // Derived state
+  // tasks[] is active work only, so total and active both describe it, while
+  // completed is counted from the independent history collection.
   const totalTasks = tasks.length;
-  const completedTasks = tasks.filter(isCompleted).length;
-  const activeTasks = totalTasks - completedTasks;
+  const activeTasks = tasks.length;
+  const completedTasks = history.length;
   const personalTasks = tasks.filter((t) => t.category === "Personal").length;
   const workTasks = tasks.filter((t) => t.category === "Work").length;
   const studyTasks = tasks.filter((t) => t.category === "Study").length;
   const shoppingTasks = tasks.filter((t) => t.category === "Shopping").length;
   const otherTasks = tasks.filter((t) => t.category === "Other").length;
+  // "completed" has no rows left in tasks[]; it surfaces the history section instead.
+  const showHistory = filter === "completed";
   const filteredTasks = tasks.filter((t) => {
     if (filter === "all") return true;
     if (filter === "active") return !isCompleted(t);
-    if (filter === "completed") return isCompleted(t);
+    if (filter === "completed") return false;
     return t.category === filter;
   });
 
@@ -103,9 +151,13 @@ function App() {
   };
 
   const today = getTodayString();
+  // Today's schedule spans active tasks plus history records that were due
+  // today, so a completed task still counts toward the day's total instead of
+  // silently vanishing from the summary once it leaves tasks[].
   const todayTasks = tasks.filter((t) => t.dueDate === today);
-  const todayCompleted = todayTasks.filter(isCompleted).length;
-  const todayTotal = todayTasks.length;
+  const todayHistory = history.filter((r) => r.dueDate === today);
+  const todayTotal = todayTasks.length + todayHistory.length;
+  const todayCompleted = todayHistory.length;
   const todayPercent = todayTotal === 0 ? 0 : Math.round((todayCompleted / todayTotal) * 100);
 
   const getEmptyMessage = () => {
@@ -140,9 +192,7 @@ function App() {
     }
     setTasks((prev) => [
       {
-        id:
-          globalThis.crypto?.randomUUID?.() ??
-          `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`,
+        id: newId(),
         title: trimmed,
         category,
         progress: 0,
@@ -157,14 +207,57 @@ function App() {
     setError("");
   };
 
-  const changeProgress = (id: string, delta: number) =>
+  // Moves a task out of tasks[] and into history[] as an independent snapshot.
+  // Called only on a genuine <100 -> 100 transition, so a task that is already
+  // complete can never produce a duplicate record.
+  const archiveTask = (task: Task) => {
+    const completedAt = new Date().toISOString();
+    setHistory((prev) => [toCompletedRecord(task, completedAt), ...prev]);
+    setTasks((prev) => prev.filter((t) => t.id !== task.id));
+  };
+
+  const changeProgress = (id: string, delta: number) => {
+    const task = tasks.find((t) => t.id === id);
+    if (!task) return;
+
+    const nextProgress = clamp(task.progress + delta);
+    if (nextProgress >= 100 && task.progress < 100) {
+      archiveTask(task);
+      return;
+    }
+
     setTasks((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, progress: clamp(t.progress + delta) } : t)),
+      prev.map((t) => {
+        if (t.id !== id) return t;
+        if (nextProgress < 100 && t.completedAt) {
+          const { completedAt, ...rest } = t;
+          return { ...rest, progress: nextProgress };
+        }
+        return { ...t, progress: nextProgress };
+      }),
     );
+  };
 
-  const completeTask = (id: string) =>
-    setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, progress: 100 } : t)));
+  const completeTask = (id: string) => {
+    const task = tasks.find((t) => t.id === id);
+    if (!task) return;
+    // Already at 100%: nothing to do, and no second history record.
+    if (isCompleted(task)) return;
+    archiveTask(task);
+  };
 
+  // Reopen pulls a history record back into the active list as a fresh task:
+  // same identity and scheduling, progress reset, no completion timestamp.
+  const reopenTask = (recordId: string) => {
+    const record = history.find((r) => r.id === recordId);
+    if (!record) return;
+
+    setTasks((prev) => [toReopenedTask(record), ...prev]);
+    setHistory((prev) => prev.filter((r) => r.id !== recordId));
+  };
+
+  // Deleting is scoped to tasks[] only. Completed work has already left tasks[],
+  // so this can never reach a history record.
   const deleteTask = (id: string) => setTasks((prev) => prev.filter((t) => t.id !== id));
 
   return (
@@ -248,15 +341,22 @@ function App() {
           />
         </div>
         <div aria-live="polite" key={filter}>
-          <TaskList
-            tasks={filteredTasks}
-            emptyMessage={emptyMessage}
-            onChangeProgress={changeProgress}
-            onComplete={completeTask}
-            onDelete={deleteTask}
-          />
+          {showHistory && history.length > 0 ? (
+            <CompletedHistory history={history} onReopen={reopenTask} />
+          ) : (
+            <TaskList
+              tasks={filteredTasks}
+              emptyMessage={emptyMessage}
+              onChangeProgress={changeProgress}
+              onComplete={completeTask}
+              onDelete={deleteTask}
+            />
+          )}
         </div>
       </section>
+      {/* Hidden while the Completed filter is showing it above, so the records
+          are never rendered twice at once. */}
+      {!showHistory && <CompletedHistory history={history} onReopen={reopenTask} />}
     </main>
   );
 }
