@@ -39,6 +39,7 @@ export function TaskCard({ task, onChangeProgress, onComplete, onDelete }: Props
                   day: "numeric",
                   year: "numeric",
                 })}
+                {task.dueTime ? ` • ${task.dueTime}` : ""}
               </span>
             )}
           </div>

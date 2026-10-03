@@ -6,10 +6,12 @@ type Props = {
   title: string;
   category: string;
   dueDate: string;
+  dueTime?: string;
   error: string;
   onTitleChange: (v: string) => void;
   onCategoryChange: (v: string) => void;
   onDueDateChange: (v: string) => void;
+  onDueTimeChange?: (v: string) => void;
   onSubmit: () => void;
 };
 
@@ -20,10 +22,12 @@ export function TaskForm({
   title,
   category,
   dueDate,
+  dueTime = "",
   error,
   onTitleChange,
   onCategoryChange,
   onDueDateChange,
+  onDueTimeChange = () => {},
   onSubmit,
 }: Props) {
   const handleSubmit = (e: FormEvent) => {
@@ -42,7 +46,7 @@ export function TaskForm({
       <form
         onSubmit={handleSubmit}
         noValidate
-        className="mt-3 grid gap-2 md:grid-cols-[1fr_160px_160px_auto] md:items-start"
+        className="mt-3 grid gap-2 md:grid-cols-[1fr_160px_140px_140px_auto] md:items-start"
       >
         <div>
           <label htmlFor="task-title" className="sr-only">
@@ -94,6 +98,18 @@ export function TaskForm({
             type="date"
             value={dueDate}
             onChange={(e) => onDueDateChange(e.target.value)}
+            className={`${field} text-muted-foreground`}
+          />
+        </div>
+        <div>
+          <label htmlFor="task-due-time" className="sr-only">
+            Due time (optional)
+          </label>
+          <input
+            id="task-due-time"
+            type="time"
+            value={dueTime}
+            onChange={(e) => onDueTimeChange(e.target.value)}
             className={`${field} text-muted-foreground`}
           />
         </div>

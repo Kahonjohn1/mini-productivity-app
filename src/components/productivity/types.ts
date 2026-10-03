@@ -4,6 +4,7 @@ export type Task = {
   category: string;
   progress: number;
   dueDate?: string; // ISO date string (yyyy-mm-dd)
+  dueTime?: string; // time string (e.g. HH:MM)
 };
 
 export type StatusFilter = "all" | "active" | "completed";

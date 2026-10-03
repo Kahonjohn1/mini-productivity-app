@@ -6,7 +6,7 @@ type Props = { dark: boolean; onToggle: () => void };
 export function Header({ dark, onToggle }: Props) {
   return (
     <header className="flex items-start justify-between gap-4">
-      <div>
+      <div className="sr-only">
         <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">Mini Productivity</h1>
         <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">
           Stay organized. Get things done.

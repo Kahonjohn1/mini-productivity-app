@@ -12,6 +12,7 @@ import {
   type Filter,
   type Task,
 } from "@/components/productivity/types";
+import { loadTasks, saveTasks } from "@/components/productivity/storage";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -46,8 +47,24 @@ function App() {
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState<string>("Personal");
   const [dueDate, setDueDate] = useState("");
+  const [dueTime, setDueTime] = useState("");
   const [error, setError] = useState("");
   const [dark, setDark] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    const stored = loadTasks();
+    if (stored.length > 0) {
+      setTasks(stored);
+    }
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (hydrated) {
+      saveTasks(tasks);
+    }
+  }, [tasks, hydrated]);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
@@ -123,16 +140,20 @@ function App() {
     }
     setTasks((prev) => [
       {
-        id: crypto.randomUUID(),
+        id:
+          globalThis.crypto?.randomUUID?.() ??
+          `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`,
         title: trimmed,
         category,
         progress: 0,
         ...(dueDate ? { dueDate } : {}),
+        ...(dueTime ? { dueTime } : {}),
       },
       ...prev,
     ]);
     setTitle("");
     setDueDate("");
+    setDueTime("");
     setError("");
   };
 
@@ -148,49 +169,54 @@ function App() {
 
   return (
     <main className="mx-auto w-full max-w-5xl space-y-3 px-4 py-3 sm:space-y-5 sm:px-6 sm:py-6 lg:px-8">
-      <Header dark={dark} onToggle={() => setDark((d) => !d)} />
-      <div className="space-y-1.5">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
-          {getGreeting()}
-        </h1>
-        <p className="text-xs text-muted-foreground sm:text-sm">
-          Here's what's on your plate today.
-        </p>
-        <div className="mt-2 space-y-1.5">
-          {todayTotal === 0 ? (
-            <p className="text-xs text-muted-foreground sm:text-sm">
-              No tasks scheduled for today.
-            </p>
-          ) : (
-            <>
-              <p className="text-xs font-medium text-foreground sm:text-sm">
-                {todayCompleted} of {todayTotal} tasks completed
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-1.5">
+          <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+            {getGreeting()}
+          </h1>
+          <p className="text-xs text-muted-foreground sm:text-sm">
+            Here's what's on your plate today.
+          </p>
+          <div className="mt-2 space-y-1.5">
+            {todayTotal === 0 ? (
+              <p className="text-xs text-muted-foreground sm:text-sm">
+                No tasks scheduled for today.
               </p>
-              <div className="flex items-center gap-2">
-                <div
-                  className="h-1.5 w-full overflow-hidden rounded-full bg-secondary"
-                  role="progressbar"
-                  aria-valuenow={todayPercent}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-label={`${todayPercent}% of today's tasks completed`}
-                >
+            ) : (
+              <>
+                <p className="text-xs font-medium text-foreground sm:text-sm">
+                  {todayCompleted} of {todayTotal} tasks completed
+                </p>
+                <div className="flex items-center gap-2">
                   <div
-                    className="h-full bg-primary transition-all duration-300 ease-out motion-reduce:transition-none"
-                    style={{ width: `${todayPercent}%` }}
-                  />
+                    className="h-1.5 w-full overflow-hidden rounded-full bg-secondary"
+                    role="progressbar"
+                    aria-valuenow={todayPercent}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-label={`${todayPercent}% of today's tasks completed`}
+                  >
+                    <div
+                      className="h-full bg-primary transition-all duration-300 ease-out motion-reduce:transition-none"
+                      style={{ width: `${todayPercent}%` }}
+                    />
+                  </div>
+                  <span className="text-xs tabular-nums text-muted-foreground">
+                    {todayPercent}%
+                  </span>
                 </div>
-                <span className="text-xs tabular-nums text-muted-foreground">{todayPercent}%</span>
-              </div>
-            </>
-          )}
+              </>
+            )}
+          </div>
         </div>
+        <Header dark={dark} onToggle={() => setDark((d) => !d)} />
       </div>
       <StatsSection total={totalTasks} active={activeTasks} completed={completedTasks} />
       <TaskForm
         title={title}
         category={category}
         dueDate={dueDate}
+        dueTime={dueTime}
         error={error}
         onTitleChange={(v) => {
           setTitle(v);
@@ -198,6 +224,7 @@ function App() {
         }}
         onCategoryChange={setCategory}
         onDueDateChange={setDueDate}
+        onDueTimeChange={setDueTime}
         onSubmit={addTask}
       />
       <section aria-labelledby="tasks-heading" className="space-y-3">
