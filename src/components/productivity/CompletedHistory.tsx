@@ -75,45 +75,46 @@ export function CompletedHistory({ history, onReopen, onDelete }: Props) {
               {key}
             </div>
             <ul className="divide-y">
-              {groups.get(key)!.map((r) => (
-                <li
-                  key={r.id}
-                  className="flex items-center justify-between gap-2 px-3 py-2 sm:px-4 sm:py-3"
-                >
-                  <div className="flex min-w-0 items-center gap-2">
-                    <Check className="h-4 w-4 shrink-0 text-success" aria-hidden />
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium sm:text-base">{r.title}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {r.category} · 100%
-                        {formatTime(r.completedAt) && (
-                          <span className="ml-1">· {formatTime(r.completedAt)}</span>
-                        )}
-                      </p>
+              {groups.get(key)!.map((r) => {
+                const time = formatTime(r.completedAt);
+                return (
+                  <li
+                    key={r.id}
+                    className="flex items-center justify-between gap-2 px-3 py-2 sm:px-4 sm:py-3"
+                  >
+                    <div className="flex min-w-0 items-center gap-2">
+                      <Check className="h-4 w-4 shrink-0 text-success" aria-hidden />
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium sm:text-base">{r.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {r.category} · 100%
+                          {time && <span className="ml-1">· {time}</span>}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => onReopen(r.id)}
-                      aria-label={`Reopen ${r.title}`}
-                      className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold transition hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-h-10 sm:px-3 sm:text-sm"
-                    >
-                      <RotateCcw className="h-3.5 w-3.5" aria-hidden />
-                      Reopen
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onDelete(r.id)}
-                      aria-label={`Delete from history: ${r.title}`}
-                      title="Delete from history"
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg border text-muted-foreground transition hover:bg-secondary hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:h-10 sm:w-10"
-                    >
-                      <Trash2 className="h-4 w-4" aria-hidden />
-                    </button>
-                  </div>
-                </li>
-              ))}
+                    <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => onReopen(r.id)}
+                        aria-label={`Reopen ${r.title}`}
+                        className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold transition hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-h-10 sm:px-3 sm:text-sm"
+                      >
+                        <RotateCcw className="h-3.5 w-3.5" aria-hidden />
+                        Reopen
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onDelete(r.id)}
+                        aria-label={`Delete from history: ${r.title}`}
+                        title="Delete from history"
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg border text-muted-foreground transition hover:bg-secondary hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:h-10 sm:w-10"
+                      >
+                        <Trash2 className="h-4 w-4" aria-hidden />
+                      </button>
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         ))}

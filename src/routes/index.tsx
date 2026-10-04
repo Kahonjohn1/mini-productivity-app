@@ -9,6 +9,7 @@ import { CompletedHistory } from "@/components/productivity/CompletedHistory";
 import {
   CATEGORIES,
   clamp,
+  isCategory,
   isCompleted,
   type CompletedRecord,
   type Filter,
@@ -36,8 +37,6 @@ export const Route = createFileRoute("/")({
         property: "og:description",
         content: "A simple task manager with categories, progress tracking and filters.",
       },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: App,
@@ -73,7 +72,7 @@ function App() {
     // work. Guarded by taskId so repeat visits cannot duplicate the record.
     const seededHistory = [...storedHistory];
     const migrated: CompletedRecord[] = [];
-    const activeTasks = storedTasks.filter((t) => {
+    const remainingTasks = storedTasks.filter((t) => {
       if (!isCompleted(t)) return true;
       if (!t.completedAt || seededHistory.some((r) => r.taskId === t.id)) return false;
       migrated.push(toCompletedRecord(t, t.completedAt));
@@ -88,12 +87,12 @@ function App() {
         if (isCompleted(t)) {
           migrated.push(toCompletedRecord(t, new Date().toISOString()));
         } else {
-          activeTasks.push(t);
+          remainingTasks.push(t);
         }
       }
     }
 
-    setTasks(activeTasks);
+    setTasks(remainingTasks);
     setHistory([...migrated, ...seededHistory]);
     setHydrated(true);
   }, []);
@@ -117,14 +116,13 @@ function App() {
   // Derived state
   // tasks[] is active work only, so total and active both describe it, while
   // completed is counted from the independent history collection.
-  const totalTasks = tasks.length;
   const activeTasks = tasks.length;
+  const totalTasks = activeTasks;
   const completedTasks = history.length;
-  const personalTasks = tasks.filter((t) => t.category === "Personal").length;
-  const workTasks = tasks.filter((t) => t.category === "Work").length;
-  const studyTasks = tasks.filter((t) => t.category === "Study").length;
-  const shoppingTasks = tasks.filter((t) => t.category === "Shopping").length;
-  const otherTasks = tasks.filter((t) => t.category === "Other").length;
+  // Built from CATEGORIES so adding a category needs no edits here.
+  const categoryCounts: Partial<Record<Filter, number>> = Object.fromEntries(
+    CATEGORIES.map((c) => [c, tasks.filter((t) => t.category === c).length]),
+  );
   // "completed" has no rows left in tasks[]; it surfaces the history section instead.
   const showHistory = filter === "completed";
   const filteredTasks = tasks.filter((t) => {
@@ -170,13 +168,7 @@ function App() {
     if (filter === "active") {
       return "You're all caught up.";
     }
-    if (
-      filter === "Personal" ||
-      filter === "Work" ||
-      filter === "Study" ||
-      filter === "Shopping" ||
-      filter === "Other"
-    ) {
+    if (isCategory(filter)) {
       return `No tasks in ${filter} yet.`;
     }
     return "No tasks match the current filter.";
@@ -337,11 +329,7 @@ function App() {
               all: totalTasks,
               active: activeTasks,
               completed: completedTasks,
-              Personal: personalTasks,
-              Work: workTasks,
-              Study: studyTasks,
-              Shopping: shoppingTasks,
-              Other: otherTasks,
+              ...categoryCounts,
             }}
             onChange={setFilter}
           />

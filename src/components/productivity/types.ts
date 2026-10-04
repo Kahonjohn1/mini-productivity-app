@@ -26,9 +26,22 @@ export type CompletedRecord = {
 };
 
 export type StatusFilter = "all" | "active" | "completed";
-export type Filter = StatusFilter | "Personal" | "Work" | "Study" | "Shopping" | "Other";
 
-export const CATEGORIES = ["Personal", "Work", "Study", "Shopping", "Other"];
+/**
+ * Single source of truth for the category list.
+ *
+ * Declared `as const` so `Category` (and therefore `Filter`) can be derived from
+ * it instead of repeating the names in a union.
+ */
+export const CATEGORIES = ["Personal", "Work", "Study", "Shopping", "Other"] as const;
+
+export type Category = (typeof CATEGORIES)[number];
+
+export type Filter = StatusFilter | Category;
+
+/** Narrows an arbitrary value to one of the known category names. */
+export const isCategory = (value: unknown): value is Category =>
+  typeof value === "string" && (CATEGORIES as readonly string[]).includes(value);
 
 export const clamp = (value: number) => Math.min(100, Math.max(0, value));
 export const isCompleted = (task: Task) => task.progress === 100;

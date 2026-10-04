@@ -8,8 +8,10 @@ type Props = {
   onDelete: (id: string) => void;
 };
 
+// Shorter on small screens, full 44px tap target from `sm` upwards. Written
+// out directly rather than rewritten from a base string at each call site.
 const btn =
-  "inline-flex min-h-11 items-center justify-center gap-1.5 rounded-lg border px-3.5 text-sm font-semibold transition active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+  "inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border px-3.5 text-sm font-semibold transition active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-h-11";
 
 export function TaskCard({ task, onChangeProgress, onComplete, onDelete }: Props) {
   const done = isCompleted(task);
@@ -84,7 +86,7 @@ export function TaskCard({ task, onChangeProgress, onComplete, onDelete }: Props
         {progress > 0 && (
           <button
             type="button"
-            className={`${btn.replace("min-h-11", "min-h-9 sm:min-h-11")} bg-background hover:bg-secondary`}
+            className={`${btn} bg-background hover:bg-secondary`}
             onClick={() => onChangeProgress(task.id, -10)}
             aria-label={`Decrease progress of ${task.title} by 10%`}
           >
@@ -95,7 +97,7 @@ export function TaskCard({ task, onChangeProgress, onComplete, onDelete }: Props
           <>
             <button
               type="button"
-              className={`${btn.replace("min-h-11", "min-h-9 sm:min-h-11")} bg-background hover:bg-secondary`}
+              className={`${btn} bg-background hover:bg-secondary`}
               onClick={() => onChangeProgress(task.id, 10)}
               aria-label={`Increase progress of ${task.title} by 10%`}
             >
@@ -103,7 +105,7 @@ export function TaskCard({ task, onChangeProgress, onComplete, onDelete }: Props
             </button>
             <button
               type="button"
-              className={`${btn.replace("min-h-11", "min-h-9 sm:min-h-11")} bg-background hover:bg-secondary`}
+              className={`${btn} bg-background hover:bg-secondary`}
               onClick={() => onChangeProgress(task.id, 25)}
               aria-label={`Increase progress of ${task.title} by 25%`}
             >
@@ -111,7 +113,7 @@ export function TaskCard({ task, onChangeProgress, onComplete, onDelete }: Props
             </button>
             <button
               type="button"
-              className={`${btn.replace("min-h-11", "min-h-9 sm:min-h-11")} border-transparent bg-primary text-primary-foreground hover:opacity-90`}
+              className={`${btn} border-transparent bg-primary text-primary-foreground hover:opacity-90`}
               onClick={() => onComplete(task.id)}
               aria-label={`Mark ${task.title} as complete`}
             >

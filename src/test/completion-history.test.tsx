@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CompletedHistory } from "@/components/productivity/CompletedHistory";
-import { toCompletedRecord, toReopenedTask } from "@/components/productivity/history";
+import { toReopenedTask } from "@/components/productivity/history";
 import { loadHistory, loadTasks, saveHistory, saveTasks } from "@/components/productivity/storage";
 import type { CompletedRecord, Task } from "@/components/productivity/types";
 

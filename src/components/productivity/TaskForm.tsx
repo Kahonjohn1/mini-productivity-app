@@ -6,12 +6,12 @@ type Props = {
   title: string;
   category: string;
   dueDate: string;
-  dueTime?: string;
+  dueTime: string;
   error: string;
   onTitleChange: (v: string) => void;
   onCategoryChange: (v: string) => void;
   onDueDateChange: (v: string) => void;
-  onDueTimeChange?: (v: string) => void;
+  onDueTimeChange: (v: string) => void;
   onSubmit: () => void;
 };
 
@@ -22,12 +22,12 @@ export function TaskForm({
   title,
   category,
   dueDate,
-  dueTime = "",
+  dueTime,
   error,
   onTitleChange,
   onCategoryChange,
   onDueDateChange,
-  onDueTimeChange = () => {},
+  onDueTimeChange,
   onSubmit,
 }: Props) {
   const handleSubmit = (e: FormEvent) => {
