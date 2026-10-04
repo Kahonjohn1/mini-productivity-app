@@ -260,6 +260,12 @@ function App() {
   // so this can never reach a history record.
   const deleteTask = (id: string) => setTasks((prev) => prev.filter((t) => t.id !== id));
 
+  // Removing a history record is scoped to history[] only: it drops the record
+  // permanently and never touches tasks[], and tasks[] holds no copy of it that
+  // could recreate the entry on the next load.
+  const deleteHistoryRecord = (recordId: string) =>
+    setHistory((prev) => prev.filter((r) => r.id !== recordId));
+
   return (
     <main className="mx-auto w-full max-w-5xl space-y-3 px-4 py-3 sm:space-y-5 sm:px-6 sm:py-6 lg:px-8">
       <div className="flex items-start justify-between gap-4">
@@ -342,7 +348,11 @@ function App() {
         </div>
         <div aria-live="polite" key={filter}>
           {showHistory && history.length > 0 ? (
-            <CompletedHistory history={history} onReopen={reopenTask} />
+            <CompletedHistory
+              history={history}
+              onReopen={reopenTask}
+              onDelete={deleteHistoryRecord}
+            />
           ) : (
             <TaskList
               tasks={filteredTasks}
@@ -356,7 +366,9 @@ function App() {
       </section>
       {/* Hidden while the Completed filter is showing it above, so the records
           are never rendered twice at once. */}
-      {!showHistory && <CompletedHistory history={history} onReopen={reopenTask} />}
+      {!showHistory && (
+        <CompletedHistory history={history} onReopen={reopenTask} onDelete={deleteHistoryRecord} />
+      )}
     </main>
   );
 }

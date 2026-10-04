@@ -1,4 +1,4 @@
-import { Check, RotateCcw } from "lucide-react";
+import { Check, RotateCcw, Trash2 } from "lucide-react";
 import type { CompletedRecord } from "./types";
 
 function parseDate(iso?: string) {
@@ -30,9 +30,10 @@ function formatTime(iso?: string) {
 type Props = {
   history: CompletedRecord[];
   onReopen: (recordId: string) => void;
+  onDelete: (recordId: string) => void;
 };
 
-export function CompletedHistory({ history, onReopen }: Props) {
+export function CompletedHistory({ history, onReopen, onDelete }: Props) {
   // Newest completion first. History is already completed by definition, so
   // there is no progress filtering here.
   const completed = [...history].sort((a, b) => {
@@ -91,15 +92,26 @@ export function CompletedHistory({ history, onReopen }: Props) {
                       </p>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => onReopen(r.id)}
-                    aria-label={`Reopen ${r.title}`}
-                    className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold transition hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-h-10 sm:px-3 sm:text-sm"
-                  >
-                    <RotateCcw className="h-3.5 w-3.5" aria-hidden />
-                    Reopen
-                  </button>
+                  <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => onReopen(r.id)}
+                      aria-label={`Reopen ${r.title}`}
+                      className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold transition hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-h-10 sm:px-3 sm:text-sm"
+                    >
+                      <RotateCcw className="h-3.5 w-3.5" aria-hidden />
+                      Reopen
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onDelete(r.id)}
+                      aria-label={`Delete from history: ${r.title}`}
+                      title="Delete from history"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg border text-muted-foreground transition hover:bg-secondary hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:h-10 sm:w-10"
+                    >
+                      <Trash2 className="h-4 w-4" aria-hidden />
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>

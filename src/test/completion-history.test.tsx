@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CompletedHistory } from "@/components/productivity/CompletedHistory";
+import { toCompletedRecord, toReopenedTask } from "@/components/productivity/history";
 import { loadHistory, loadTasks, saveHistory, saveTasks } from "@/components/productivity/storage";
 import type { CompletedRecord, Task } from "@/components/productivity/types";
 
@@ -36,12 +37,14 @@ afterEach(() => {
 
 describe("CompletedHistory", () => {
   it("renders nothing when history is empty", () => {
-    const { container } = render(<CompletedHistory history={[]} onReopen={() => {}} />);
+    const { container } = render(
+      <CompletedHistory history={[]} onReopen={() => {}} onDelete={() => {}} />,
+    );
     expect(container).toBeEmptyDOMElement();
   });
 
   it("shows a completed record under Today", () => {
-    render(<CompletedHistory history={[record()]} onReopen={() => {}} />);
+    render(<CompletedHistory history={[record()]} onReopen={() => {}} onDelete={() => {}} />);
     expect(screen.getByRole("heading", { name: "Completed History" })).toBeInTheDocument();
     expect(screen.getByText("Today")).toBeInTheDocument();
     expect(screen.getByText("Build portfolio")).toBeInTheDocument();
@@ -52,6 +55,7 @@ describe("CompletedHistory", () => {
       <CompletedHistory
         history={[record({ title: "Read docs", category: "Study" })]}
         onReopen={() => {}}
+        onDelete={() => {}}
       />,
     );
     expect(container.textContent).toContain("Study");
@@ -65,6 +69,7 @@ describe("CompletedHistory", () => {
       <CompletedHistory
         history={[record({ title: "Old task", completedAt: y.toISOString() })]}
         onReopen={() => {}}
+        onDelete={() => {}}
       />,
     );
     expect(screen.getByText("Yesterday")).toBeInTheDocument();
@@ -73,14 +78,24 @@ describe("CompletedHistory", () => {
   it("does not filter history by progress", () => {
     // History is completed by definition; a stray non-100 value still renders.
     const { container } = render(
-      <CompletedHistory history={[record({ progress: 0 })]} onReopen={() => {}} />,
+      <CompletedHistory
+        history={[record({ progress: 0 })]}
+        onReopen={() => {}}
+        onDelete={() => {}}
+      />,
     );
     expect(container.textContent).toContain("Build portfolio");
   });
 
   it("calls onReopen with the record id", () => {
     const onReopen = vi.fn();
-    render(<CompletedHistory history={[record({ id: "rec-42" })]} onReopen={onReopen} />);
+    render(
+      <CompletedHistory
+        history={[record({ id: "rec-42" })]}
+        onReopen={onReopen}
+        onDelete={() => {}}
+      />,
+    );
 
     fireEvent.click(screen.getByRole("button", { name: "Reopen Build portfolio" }));
 
@@ -97,10 +112,169 @@ describe("CompletedHistory", () => {
           record({ id: "rec-b" }),
         ]}
         onReopen={() => {}}
+        onDelete={() => {}}
       />,
     );
     expect(screen.getAllByText("Build portfolio")).toHaveLength(2);
     expect(screen.getAllByRole("button", { name: /Reopen/ })).toHaveLength(2);
+  });
+});
+
+describe("CompletedHistory delete action", () => {
+  it("calls onDelete with the record id", () => {
+    const onDelete = vi.fn();
+    render(
+      <CompletedHistory
+        history={[record({ id: "rec-7", title: "Build portfolio" })]}
+        onReopen={() => {}}
+        onDelete={onDelete}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Delete from history: Build portfolio" }));
+
+    expect(onDelete).toHaveBeenCalledWith("rec-7");
+  });
+
+  it("exposes an accessible label including the task title", () => {
+    render(
+      <CompletedHistory
+        history={[record({ title: "Read documentation" })]}
+        onReopen={() => {}}
+        onDelete={() => {}}
+      />,
+    );
+
+    expect(
+      screen.getByRole("button", { name: "Delete from history: Read documentation" }),
+    ).toBeInTheDocument();
+  });
+
+  it("deletes only the targeted record", () => {
+    const onDelete = vi.fn();
+    render(
+      <CompletedHistory
+        history={[
+          record({ id: "rec-a", title: "Keep me" }),
+          record({ id: "rec-b", title: "Drop me" }),
+        ]}
+        onReopen={() => {}}
+        onDelete={onDelete}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Delete from history: Drop me" }));
+
+    expect(onDelete).toHaveBeenCalledTimes(1);
+    expect(onDelete).toHaveBeenCalledWith("rec-b");
+  });
+
+  it("does not invoke onReopen when Delete is used", () => {
+    const onReopen = vi.fn();
+    const onDelete = vi.fn();
+    render(<CompletedHistory history={[record()]} onReopen={onReopen} onDelete={onDelete} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Delete from history: Build portfolio" }));
+
+    expect(onDelete).toHaveBeenCalledTimes(1);
+    expect(onReopen).not.toHaveBeenCalled();
+  });
+
+  it("does not invoke onDelete when Reopen is used", () => {
+    const onReopen = vi.fn();
+    const onDelete = vi.fn();
+    render(<CompletedHistory history={[record()]} onReopen={onReopen} onDelete={onDelete} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Reopen Build portfolio" }));
+
+    expect(onReopen).toHaveBeenCalledTimes(1);
+    expect(onDelete).not.toHaveBeenCalled();
+  });
+
+  it("renders one delete control per record", () => {
+    render(
+      <CompletedHistory
+        history={[record({ id: "rec-a" }), record({ id: "rec-b" })]}
+        onReopen={() => {}}
+        onDelete={() => {}}
+      />,
+    );
+
+    expect(screen.getAllByRole("button", { name: /Delete from history/ })).toHaveLength(2);
+  });
+});
+
+describe("deleting a history record", () => {
+  // Mirrors deleteHistoryRecord: filters history[] only.
+  const deleteRecord = (history: CompletedRecord[], recordId: string) =>
+    history.filter((r) => r.id !== recordId);
+
+  it("removes the record permanently", () => {
+    const history = [record({ id: "rec-1" })];
+    expect(deleteRecord(history, "rec-1")).toHaveLength(0);
+  });
+
+  it("leaves other history records untouched", () => {
+    const history = [record({ id: "rec-a" }), record({ id: "rec-b" })];
+    const after = deleteRecord(history, "rec-a");
+
+    expect(after).toHaveLength(1);
+    expect(after[0]?.id).toBe("rec-b");
+  });
+
+  it("does not recreate the record from active tasks after a reload", () => {
+    // tasks[] holds active work only, so there is no row that could restore it.
+    saveHistory([record({ id: "rec-1", taskId: "1" })]);
+    saveTasks([task({ id: "2", title: "Unrelated active" })]);
+
+    saveHistory(deleteRecord(loadHistory(), "rec-1"));
+
+    expect(loadHistory()).toEqual([]);
+    // The unrelated active task is untouched.
+    expect(loadTasks().map((t) => t.id)).toEqual(["2"]);
+  });
+
+  it("stays deleted after a reload", () => {
+    saveHistory([record({ id: "rec-1" }), record({ id: "rec-2" })]);
+    saveHistory(deleteRecord(loadHistory(), "rec-1"));
+
+    // Simulate refresh by reading back from storage.
+    expect(loadHistory().map((r) => r.id)).toEqual(["rec-2"]);
+  });
+
+  it("does not affect tasks when no tasks are stored", () => {
+    saveHistory([record({ id: "rec-1" })]);
+    saveTasks([]);
+
+    saveHistory(deleteRecord(loadHistory(), "rec-1"));
+
+    expect(loadHistory()).toEqual([]);
+    expect(loadTasks()).toEqual([]);
+  });
+
+  it("reopening after a sibling delete still works", () => {
+    saveHistory([
+      record({ id: "rec-1", taskId: "1", title: "Keep" }),
+      record({ id: "rec-2", taskId: "2", title: "Drop" }),
+    ]);
+    saveTasks([]);
+
+    const target = loadHistory().find((r) => r.id === "rec-2")!;
+    saveHistory(deleteRecord(loadHistory(), "rec-2"));
+    saveTasks([toReopenedTask(target)]);
+
+    expect(loadHistory().map((r) => r.id)).toEqual(["rec-1"]);
+    expect(loadTasks()[0]?.id).toBe("2");
+    expect(loadTasks()[0]?.progress).toBe(0);
+  });
+
+  it("completed count drops after a delete", () => {
+    saveHistory([record({ id: "rec-1" }), record({ id: "rec-2" })]);
+    expect(loadHistory().length).toBe(2);
+
+    saveHistory(deleteRecord(loadHistory(), "rec-1"));
+
+    expect(loadHistory().length).toBe(1);
   });
 });
 
