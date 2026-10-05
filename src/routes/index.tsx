@@ -262,7 +262,10 @@ function App() {
     <main className="mx-auto w-full max-w-5xl space-y-3 px-4 py-3 sm:space-y-5 sm:px-6 sm:py-6 lg:px-8">
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1.5">
-          <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+          <h1
+            suppressHydrationWarning
+            className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl"
+          >
             {getGreeting()}
           </h1>
           <p className="text-xs text-muted-foreground sm:text-sm">
